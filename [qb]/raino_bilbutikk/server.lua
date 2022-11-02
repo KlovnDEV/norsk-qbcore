@@ -1,5 +1,5 @@
 -- Variables
-local QBCore = exports['raino_core']:GetCoreObject()
+local raino = exports['raino_core']:GetCoreObject()
 local financetimer = {}
 
 -- Handlers
@@ -69,7 +69,7 @@ local function calculateNewFinance(paymentAmount, vehData)
 end
 
 local function GeneratePlate()
-    local plate = QBCore.Shared.RandomInt(1) .. raino.Shared.RandomStr(2) .. QBCore.Shared.RandomInt(3) .. QBCore.Shared.RandomStr(2)
+    local plate = raino.Shared.RandomInt(1) .. raino.Shared.RandomStr(2) .. raino.Shared.RandomInt(3) .. raino.Shared.RandomStr(2)
     local result = MySQL.scalar.await('SELECT plate FROM spiller_kjoretoy WHERE plate = ?', {plate})
     if result then
         return GeneratePlate()
@@ -91,9 +91,9 @@ local function comma_value(amount)
 end
 
 -- Callbacks
-QBCore.Functions.CreateCallback('raino_bilbutikk:server:getVehicles', function(source, cb)
+raino.Functions.CreateCallback('raino_bilbutikk:server:getVehicles', function(source, cb)
     local src = source
-    local player = QBCore.Functions.GetPlayer(src)
+    local player = raino.Functions.GetPlayer(src)
     if player then
         local vehicles = MySQL.query.await('SELECT * FROM spiller_kjoretoy WHERE citizenid = ?', {player.PlayerData.citizenid})
         if vehicles[1] then
@@ -122,21 +122,21 @@ end)
 RegisterNetEvent('raino_bilbutikk:server:customTestDrive', function(vehicle, playerid)
     local src = source
     local target = tonumber(playerid)
-    if not QBCore.Functions.GetPlayer(target) then
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.Invalid_ID'), 'error')
+    if not raino.Functions.GetPlayer(target) then
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.Invalid_ID'), 'error')
         return
     end
     if #(GetEntityCoords(GetPlayerPed(src)) - GetEntityCoords(GetPlayerPed(target))) < 3 then
         TriggerClientEvent('raino_bilbutikk:client:customTestDrive', target, vehicle)
     else
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.playertoofar'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.playertoofar'), 'error')
     end
 end)
 
 -- Make a finance payment
 RegisterNetEvent('raino_bilbutikk:server:financePayment', function(paymentAmount, vehData)
     local src = source
-    local player = QBCore.Functions.GetPlayer(src)
+    local player = raino.Functions.GetPlayer(src)
     local cash = player.PlayerData.money['cash']
     local bank = player.PlayerData.money['bank']
     local plate = vehData.vehiclePlate
@@ -153,13 +153,13 @@ RegisterNetEvent('raino_bilbutikk:server:financePayment', function(paymentAmount
                 player.Functions.RemoveMoney('bank', paymentAmount)
                 MySQL.update('UPDATE spiller_kjoretoy SET balance = ?, paymentamount = ?, paymentsleft = ?, financetime = ? WHERE plate = ?', {newBalance, newPayment, newPaymentsLeft, timer, plate})
             else
-                TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notenoughmoney'), 'error')
+                TriggerClientEvent('raino:Notify', src, Lang:t('error.notenoughmoney'), 'error')
             end
         else
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('error.minimumallowed') .. comma_value(minPayment), 'error')
+            TriggerClientEvent('raino:Notify', src, Lang:t('error.minimumallowed') .. comma_value(minPayment), 'error')
         end
     else
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.overpaid'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.overpaid'), 'error')
     end
 end)
 
@@ -167,7 +167,7 @@ end)
 -- Pay off vehice in full
 RegisterNetEvent('raino_bilbutikk:server:financePaymentFull', function(data)
     local src = source
-    local player = QBCore.Functions.GetPlayer(src)
+    local player = raino.Functions.GetPlayer(src)
     local cash = player.PlayerData.money['cash']
     local bank = player.PlayerData.money['bank']
     local vehBalance = data.vehBalance
@@ -180,10 +180,10 @@ RegisterNetEvent('raino_bilbutikk:server:financePaymentFull', function(data)
             player.Functions.RemoveMoney('bank', vehBalance)
             MySQL.update('UPDATE spiller_kjoretoy SET balance = ?, paymentamount = ?, paymentsleft = ?, financetime = ? WHERE plate = ?', {0, 0, 0, 0, vehPlate})
         else
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notenoughmoney'), 'error')
+            TriggerClientEvent('raino:Notify', src, Lang:t('error.notenoughmoney'), 'error')
         end
     else
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.alreadypaid'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.alreadypaid'), 'error')
     end
 end)
 
@@ -191,11 +191,11 @@ end)
 RegisterNetEvent('raino_bilbutikk:server:buyShowroomVehicle', function(vehicle)
     local src = source
     vehicle = vehicle.buyVehicle
-    local pData = QBCore.Functions.GetPlayer(src)
+    local pData = raino.Functions.GetPlayer(src)
     local cid = pData.PlayerData.citizenid
     local cash = pData.PlayerData.money['cash']
     local bank = pData.PlayerData.money['bank']
-    local vehiclePrice = QBCore.Shared.Vehicles[vehicle]['price']
+    local vehiclePrice = raino.Shared.Vehicles[vehicle]['price']
     local plate = GeneratePlate()
     if cash > tonumber(vehiclePrice) then
         MySQL.insert('INSERT INTO spiller_kjoretoy (license, citizenid, vehicle, hash, mods, plate, garage, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', {
@@ -208,7 +208,7 @@ RegisterNetEvent('raino_bilbutikk:server:buyShowroomVehicle', function(vehicle)
             'pillboxgarage',
             0
         })
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.purchased'), 'success')
+        TriggerClientEvent('raino:Notify', src, Lang:t('success.purchased'), 'success')
         TriggerClientEvent('raino_bilbutikk:client:buyShowroomVehicle', src, vehicle, plate)
         pData.Functions.RemoveMoney('cash', vehiclePrice, 'vehicle-bought-in-showroom')
     elseif bank > tonumber(vehiclePrice) then
@@ -222,11 +222,11 @@ RegisterNetEvent('raino_bilbutikk:server:buyShowroomVehicle', function(vehicle)
             'pillboxgarage',
             0
         })
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.purchased'), 'success')
+        TriggerClientEvent('raino:Notify', src, Lang:t('success.purchased'), 'success')
         TriggerClientEvent('raino_bilbutikk:client:buyShowroomVehicle', src, vehicle, plate)
         pData.Functions.RemoveMoney('bank', vehiclePrice, 'vehicle-bought-in-showroom')
     else
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notenoughmoney'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.notenoughmoney'), 'error')
     end
 end)
 
@@ -235,16 +235,16 @@ RegisterNetEvent('raino_bilbutikk:server:financeVehicle', function(downPayment, 
     local src = source
     downPayment = tonumber(downPayment)
     paymentAmount = tonumber(paymentAmount)
-    local pData = QBCore.Functions.GetPlayer(src)
+    local pData = raino.Functions.GetPlayer(src)
     local cid = pData.PlayerData.citizenid
     local cash = pData.PlayerData.money['cash']
     local bank = pData.PlayerData.money['bank']
-    local vehiclePrice = QBCore.Shared.Vehicles[vehicle]['price']
+    local vehiclePrice = raino.Shared.Vehicles[vehicle]['price']
     local timer = (Config.PaymentInterval * 60)
     local minDown = tonumber(round((Config.MinimumDown / 100) * vehiclePrice))
-    if downPayment > vehiclePrice then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notworth'), 'error') end
-    if downPayment < minDown then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.downtoosmall'), 'error') end
-    if paymentAmount > Config.MaximumPayments then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.exceededmax'), 'error') end
+    if downPayment > vehiclePrice then return TriggerClientEvent('raino:Notify', src, Lang:t('error.notworth'), 'error') end
+    if downPayment < minDown then return TriggerClientEvent('raino:Notify', src, Lang:t('error.downtoosmall'), 'error') end
+    if paymentAmount > Config.MaximumPayments then return TriggerClientEvent('raino:Notify', src, Lang:t('error.exceededmax'), 'error') end
     local plate = GeneratePlate()
     local balance, vehPaymentAmount = calculateFinance(vehiclePrice, downPayment, paymentAmount)
     if cash >= downPayment then
@@ -262,7 +262,7 @@ RegisterNetEvent('raino_bilbutikk:server:financeVehicle', function(downPayment, 
             paymentAmount,
             timer
         })
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.purchased'), 'success')
+        TriggerClientEvent('raino:Notify', src, Lang:t('success.purchased'), 'success')
         TriggerClientEvent('raino_bilbutikk:client:buyShowroomVehicle', src, vehicle, plate)
         pData.Functions.RemoveMoney('cash', downPayment, 'vehicle-bought-in-showroom')
     elseif bank >= downPayment then
@@ -280,22 +280,22 @@ RegisterNetEvent('raino_bilbutikk:server:financeVehicle', function(downPayment, 
             paymentAmount,
             timer
         })
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.purchased'), 'success')
+        TriggerClientEvent('raino:Notify', src, Lang:t('success.purchased'), 'success')
         TriggerClientEvent('raino_bilbutikk:client:buyShowroomVehicle', src, vehicle, plate)
         pData.Functions.RemoveMoney('bank', downPayment, 'vehicle-bought-in-showroom')
     else
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notenoughmoney'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.notenoughmoney'), 'error')
     end
 end)
 
 -- Sell vehicle to customer
 RegisterNetEvent('raino_bilbutikk:server:sellShowroomVehicle', function(data, playerid)
     local src = source
-    local player = QBCore.Functions.GetPlayer(src)
-    local target = QBCore.Functions.GetPlayer(tonumber(playerid))
+    local player = raino.Functions.GetPlayer(src)
+    local target = raino.Functions.GetPlayer(tonumber(playerid))
 
     if not target then
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.Invalid_ID'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.Invalid_ID'), 'error')
         return
     end
 
@@ -304,7 +304,7 @@ RegisterNetEvent('raino_bilbutikk:server:sellShowroomVehicle', function(data, pl
         local cash = target.PlayerData.money['cash']
         local bank = target.PlayerData.money['bank']
         local vehicle = data
-        local vehiclePrice = QBCore.Shared.Vehicles[vehicle]['price']
+        local vehiclePrice = raino.Shared.Vehicles[vehicle]['price']
         local commission = round(vehiclePrice * Config.Commission)
         local plate = GeneratePlate()
         if cash >= tonumber(vehiclePrice) then
@@ -321,9 +321,9 @@ RegisterNetEvent('raino_bilbutikk:server:sellShowroomVehicle', function(data, pl
             TriggerClientEvent('raino_bilbutikk:client:buyShowroomVehicle', target.PlayerData.source, vehicle, plate)
             target.Functions.RemoveMoney('cash', vehiclePrice, 'vehicle-bought-in-showroom')
             player.Functions.AddMoney('bank', commission)
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('success.earned_commission', {amount = comma_value(commission)}), 'success')
-            exports['qb-management']:AddMoney(player.PlayerData.job.name, vehiclePrice)
-            TriggerClientEvent('QBCore:Notify', target.PlayerData.source, Lang:t('success.purchased'), 'success')
+            TriggerClientEvent('raino:Notify', src, Lang:t('success.earned_commission', {amount = comma_value(commission)}), 'success')
+            exports['raino_management']:AddMoney(player.PlayerData.job.name, vehiclePrice)
+            TriggerClientEvent('raino:Notify', target.PlayerData.source, Lang:t('success.purchased'), 'success')
         elseif bank >= tonumber(vehiclePrice) then
             MySQL.insert('INSERT INTO spiller_kjoretoy (license, citizenid, vehicle, hash, mods, plate, garage, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', {
                 target.PlayerData.license,
@@ -338,25 +338,25 @@ RegisterNetEvent('raino_bilbutikk:server:sellShowroomVehicle', function(data, pl
             TriggerClientEvent('raino_bilbutikk:client:buyShowroomVehicle', target.PlayerData.source, vehicle, plate)
             target.Functions.RemoveMoney('bank', vehiclePrice, 'vehicle-bought-in-showroom')
             player.Functions.AddMoney('bank', commission)
-            exports['qb-management']:AddMoney(player.PlayerData.job.name, vehiclePrice)
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('success.earned_commission', {amount = comma_value(commission)}), 'success')
-            TriggerClientEvent('QBCore:Notify', target.PlayerData.source, Lang:t('success.purchased'), 'success')
+            exports['raino_management']:AddMoney(player.PlayerData.job.name, vehiclePrice)
+            TriggerClientEvent('raino:Notify', src, Lang:t('success.earned_commission', {amount = comma_value(commission)}), 'success')
+            TriggerClientEvent('raino:Notify', target.PlayerData.source, Lang:t('success.purchased'), 'success')
         else
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notenoughmoney'), 'error')
+            TriggerClientEvent('raino:Notify', src, Lang:t('error.notenoughmoney'), 'error')
         end
     else
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.playertoofar'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.playertoofar'), 'error')
     end
 end)
 
 -- Finance vehicle to customer
 RegisterNetEvent('raino_bilbutikk:server:sellfinanceVehicle', function(downPayment, paymentAmount, vehicle, playerid)
     local src = source
-    local player = QBCore.Functions.GetPlayer(src)
-    local target = QBCore.Functions.GetPlayer(tonumber(playerid))
+    local player = raino.Functions.GetPlayer(src)
+    local target = raino.Functions.GetPlayer(tonumber(playerid))
 
     if not target then
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.Invalid_ID'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.Invalid_ID'), 'error')
         return
     end
 
@@ -366,12 +366,12 @@ RegisterNetEvent('raino_bilbutikk:server:sellfinanceVehicle', function(downPayme
         local cid = target.PlayerData.citizenid
         local cash = target.PlayerData.money['cash']
         local bank = target.PlayerData.money['bank']
-        local vehiclePrice = QBCore.Shared.Vehicles[vehicle]['price']
+        local vehiclePrice = raino.Shared.Vehicles[vehicle]['price']
         local timer = (Config.PaymentInterval * 60)
         local minDown = tonumber(round((Config.MinimumDown / 100) * vehiclePrice))
-        if downPayment > vehiclePrice then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notworth'), 'error') end
-        if downPayment < minDown then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.downtoosmall'), 'error') end
-        if paymentAmount > Config.MaximumPayments then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.exceededmax'), 'error') end
+        if downPayment > vehiclePrice then return TriggerClientEvent('raino:Notify', src, Lang:t('error.notworth'), 'error') end
+        if downPayment < minDown then return TriggerClientEvent('raino:Notify', src, Lang:t('error.downtoosmall'), 'error') end
+        if paymentAmount > Config.MaximumPayments then return TriggerClientEvent('raino:Notify', src, Lang:t('error.exceededmax'), 'error') end
         local commission = round(vehiclePrice * Config.Commission)
         local plate = GeneratePlate()
         local balance, vehPaymentAmount = calculateFinance(vehiclePrice, downPayment, paymentAmount)
@@ -393,9 +393,9 @@ RegisterNetEvent('raino_bilbutikk:server:sellfinanceVehicle', function(downPayme
             TriggerClientEvent('raino_bilbutikk:client:buyShowroomVehicle', target.PlayerData.source, vehicle, plate)
             target.Functions.RemoveMoney('cash', downPayment, 'vehicle-bought-in-showroom')
             player.Functions.AddMoney('bank', commission)
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('success.earned_commission', {amount = comma_value(commission)}), 'success')
-            exports['qb-management']:AddMoney(player.PlayerData.job.name, vehiclePrice)
-            TriggerClientEvent('QBCore:Notify', target.PlayerData.source, Lang:t('success.purchased'), 'success')
+            TriggerClientEvent('raino:Notify', src, Lang:t('success.earned_commission', {amount = comma_value(commission)}), 'success')
+            exports['raino_management']:AddMoney(player.PlayerData.job.name, vehiclePrice)
+            TriggerClientEvent('raino:Notify', target.PlayerData.source, Lang:t('success.purchased'), 'success')
         elseif bank >= downPayment then
             MySQL.insert('INSERT INTO spiller_kjoretoy (license, citizenid, vehicle, hash, mods, plate, garage, state, balance, paymentamount, paymentsleft, financetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
                 target.PlayerData.license,
@@ -414,82 +414,82 @@ RegisterNetEvent('raino_bilbutikk:server:sellfinanceVehicle', function(downPayme
             TriggerClientEvent('raino_bilbutikk:client:buyShowroomVehicle', target.PlayerData.source, vehicle, plate)
             target.Functions.RemoveMoney('bank', downPayment, 'vehicle-bought-in-showroom')
             player.Functions.AddMoney('bank', commission)
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('success.earned_commission', {amount = comma_value(commission)}), 'success')
-            exports['qb-management']:AddMoney(player.PlayerData.job.name, vehiclePrice)
-            TriggerClientEvent('QBCore:Notify', target.PlayerData.source, Lang:t('success.purchased'), 'success')
+            TriggerClientEvent('raino:Notify', src, Lang:t('success.earned_commission', {amount = comma_value(commission)}), 'success')
+            exports['raino_management']:AddMoney(player.PlayerData.job.name, vehiclePrice)
+            TriggerClientEvent('raino:Notify', target.PlayerData.source, Lang:t('success.purchased'), 'success')
         else
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notenoughmoney'), 'error')
+            TriggerClientEvent('raino:Notify', src, Lang:t('error.notenoughmoney'), 'error')
         end
     else
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.playertoofar'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.playertoofar'), 'error')
     end
 end)
 
 -- Check if payment is due
 RegisterNetEvent('raino_bilbutikk:server:checkFinance', function()
     local src = source
-    local player = QBCore.Functions.GetPlayer(src)
+    local player = raino.Functions.GetPlayer(src)
     local query = 'SELECT * FROM spiller_kjoretoy WHERE citizenid = ? AND balance > 0 AND financetime < 1'
     local result = MySQL.query.await(query, {player.PlayerData.citizenid})
     if result[1] then
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('general.paymentduein', {time = Config.PaymentWarning}))
+        TriggerClientEvent('raino:Notify', src, Lang:t('general.paymentduein', {time = Config.PaymentWarning}))
         Wait(Config.PaymentWarning * 60000)
         local vehicles = MySQL.query.await(query, {player.PlayerData.citizenid})
         for _, v in pairs(vehicles) do
             local plate = v.plate
             MySQL.query('DELETE FROM spiller_kjoretoy WHERE plate = @plate', {['@plate'] = plate})
             --MySQL.update('UPDATE spiller_kjoretoy SET citizenid = ? WHERE plate = ?', {'REPO-'..v.citizenid, plate}) -- Use this if you don't want them to be deleted
-            TriggerClientEvent('QBCore:Notify', src, Lang:t('error.repossessed', {plate = plate}), 'error')
+            TriggerClientEvent('raino:Notify', src, Lang:t('error.repossessed', {plate = plate}), 'error')
         end
     end
 end)
 
 -- Transfer vehicle to player in passenger seat
-QBCore.Commands.Add('transfervehicle', Lang:t('general.command_transfervehicle'), {{name = 'ID', help = Lang:t('general.command_transfervehicle_help')}, {name = 'amount', help = Lang:t('general.command_transfervehicle_amount')}}, false, function(source, args)
+raino.Commands.Add('transfervehicle', Lang:t('general.command_transfervehicle'), {{name = 'ID', help = Lang:t('general.command_transfervehicle_help')}, {name = 'amount', help = Lang:t('general.command_transfervehicle_amount')}}, false, function(source, args)
     local src = source
     local buyerId = tonumber(args[1])
     local sellAmount = tonumber(args[2])
-    if buyerId == 0 then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.Invalid_ID'), 'error') end
+    if buyerId == 0 then return TriggerClientEvent('raino:Notify', src, Lang:t('error.Invalid_ID'), 'error') end
     local ped = GetPlayerPed(src)
     local targetPed = GetPlayerPed(buyerId)
-    if targetPed == 0 then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.buyerinfo'), 'error') end
+    if targetPed == 0 then return TriggerClientEvent('raino:Notify', src, Lang:t('error.buyerinfo'), 'error') end
     local vehicle = GetVehiclePedIsIn(ped, false)
-    if vehicle == 0 then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notinveh'), 'error') end
-    local plate = QBCore.Shared.Trim(GetVehicleNumberPlateText(vehicle))
-    if not plate then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.vehinfo'), 'error') end
-    local player = QBCore.Functions.GetPlayer(src)
-    local target = QBCore.Functions.GetPlayer(buyerId)
+    if vehicle == 0 then return TriggerClientEvent('raino:Notify', src, Lang:t('error.notinveh'), 'error') end
+    local plate = raino.Shared.Trim(GetVehicleNumberPlateText(vehicle))
+    if not plate then return TriggerClientEvent('raino:Notify', src, Lang:t('error.vehinfo'), 'error') end
+    local player = raino.Functions.GetPlayer(src)
+    local target = raino.Functions.GetPlayer(buyerId)
     local row = MySQL.single.await('SELECT * FROM spiller_kjoretoy WHERE plate = ?', {plate})
     if Config.PreventFinanceSelling then
-        if row.balance > 0 then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.financed'), 'error') end
+        if row.balance > 0 then return TriggerClientEvent('raino:Notify', src, Lang:t('error.financed'), 'error') end
     end
-    if row.citizenid ~= player.PlayerData.citizenid then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.notown'), 'error') end
-    if #(GetEntityCoords(ped) - GetEntityCoords(targetPed)) > 5.0 then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.playertoofar'), 'error') end
+    if row.citizenid ~= player.PlayerData.citizenid then return TriggerClientEvent('raino:Notify', src, Lang:t('error.notown'), 'error') end
+    if #(GetEntityCoords(ped) - GetEntityCoords(targetPed)) > 5.0 then return TriggerClientEvent('raino:Notify', src, Lang:t('error.playertoofar'), 'error') end
     local targetcid = target.PlayerData.citizenid
-    local targetlicense = QBCore.Functions.GetIdentifier(target.PlayerData.source, 'license')
-    if not target then return TriggerClientEvent('QBCore:Notify', src, Lang:t('error.buyerinfo'), 'error') end
+    local targetlicense = raino.Functions.GetIdentifier(target.PlayerData.source, 'license')
+    if not target then return TriggerClientEvent('raino:Notify', src, Lang:t('error.buyerinfo'), 'error') end
     if not sellAmount then
         MySQL.update('UPDATE spiller_kjoretoy SET citizenid = ?, license = ? WHERE plate = ?', {targetcid, targetlicense, plate})
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.gifted'), 'success')
+        TriggerClientEvent('raino:Notify', src, Lang:t('success.gifted'), 'success')
         TriggerClientEvent('vehiclekeys:client:SetOwner', buyerId, plate)
-        TriggerClientEvent('QBCore:Notify', buyerId, Lang:t('success.received_gift'), 'success')
+        TriggerClientEvent('raino:Notify', buyerId, Lang:t('success.received_gift'), 'success')
         return
     end
     if target.Functions.GetMoney('cash') > sellAmount then
         MySQL.update('UPDATE spiller_kjoretoy SET citizenid = ?, license = ? WHERE plate = ?', {targetcid, targetlicense, plate})
         player.Functions.AddMoney('cash', sellAmount)
         target.Functions.RemoveMoney('cash', sellAmount)
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.soldfor') .. comma_value(sellAmount), 'success')
+        TriggerClientEvent('raino:Notify', src, Lang:t('success.soldfor') .. comma_value(sellAmount), 'success')
         TriggerClientEvent('vehiclekeys:client:SetOwner', buyerId, plate)
-        TriggerClientEvent('QBCore:Notify', buyerId, Lang:t('success.boughtfor') .. comma_value(sellAmount), 'success')
+        TriggerClientEvent('raino:Notify', buyerId, Lang:t('success.boughtfor') .. comma_value(sellAmount), 'success')
     elseif target.Functions.GetMoney('bank') > sellAmount then
         MySQL.update('UPDATE spiller_kjoretoy SET citizenid = ?, license = ? WHERE plate = ?', {targetcid, targetlicense, plate})
         player.Functions.AddMoney('bank', sellAmount)
         target.Functions.RemoveMoney('bank', sellAmount)
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.soldfor') .. comma_value(sellAmount), 'success')
+        TriggerClientEvent('raino:Notify', src, Lang:t('success.soldfor') .. comma_value(sellAmount), 'success')
         TriggerClientEvent('vehiclekeys:client:SetOwner', buyerId, plate)
-        TriggerClientEvent('QBCore:Notify', buyerId, Lang:t('success.boughtfor') .. comma_value(sellAmount), 'success')
+        TriggerClientEvent('raino:Notify', buyerId, Lang:t('success.boughtfor') .. comma_value(sellAmount), 'success')
     else
-        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.buyertoopoor'), 'error')
+        TriggerClientEvent('raino:Notify', src, Lang:t('error.buyertoopoor'), 'error')
     end
 end)

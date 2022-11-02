@@ -1,6 +1,6 @@
 -- Variables
-local QBCore = exports['raino_core']:GetCoreObject()
-local PlayerData = QBCore.Functions.GetPlayerData()
+local raino = exports['raino_core']:GetCoreObject()
+local PlayerData = raino.Functions.GetPlayerData()
 local testDriveZone = nil
 local vehicleMenu = {}
 local Initialized = false
@@ -10,19 +10,19 @@ local zones = {}
 local insideShop, tempShop = nil, nil
 
 -- Handlers
-AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
-    PlayerData = QBCore.Functions.GetPlayerData()
+AddEventHandler('raino:Client:OnPlayerLoaded', function()
+    PlayerData = raino.Functions.GetPlayerData()
     local citizenid = PlayerData.citizenid
     TriggerServerEvent('raino_bilbutikk:server:addPlayer', citizenid)
     TriggerServerEvent('raino_bilbutikk:server:checkFinance')
     if not Initialized then Init() end
 end)
 
-RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
+RegisterNetEvent('raino:Client:OnJobUpdate', function(JobInfo)
     PlayerData.job = JobInfo
 end)
 
-RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
+RegisterNetEvent('raino:Client:OnPlayerUnload', function()
     local citizenid = PlayerData.citizenid
     TriggerServerEvent('raino_bilbutikk:server:removePlayer', citizenid)
     PlayerData = {}
@@ -86,15 +86,15 @@ local function comma_value(amount)
 end
 
 local function getVehName()
-    return QBCore.Shared.Vehicles[Config.Shops[insideShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle]["name"]
+    return raino.Shared.Vehicles[Config.Shops[insideShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle]["name"]
 end
 
 local function getVehPrice()
-    return comma_value(QBCore.Shared.Vehicles[Config.Shops[insideShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle]["price"])
+    return comma_value(raino.Shared.Vehicles[Config.Shops[insideShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle]["price"])
 end
 
 local function getVehBrand()
-    return QBCore.Shared.Vehicles[Config.Shops[insideShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle]['brand']
+    return raino.Shared.Vehicles[Config.Shops[insideShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle]['brand']
 end
 
 local function setClosestShowroomVehicle()
@@ -131,9 +131,9 @@ local function createTestDriveReturn()
     testDriveZone:onPlayerInOut(function(isPointInside)
         if isPointInside and IsPedInAnyVehicle(PlayerPedId()) then
             SetVehicleForwardSpeed(GetVehiclePedIsIn(PlayerPedId(), false), 0)
-            exports['qb-menu']:openMenu(returnTestDrive)
+            exports['raino_menu']:openMenu(returnTestDrive)
         else
-            exports['qb-menu']:closeMenu()
+            exports['raino_menu']:closeMenu()
         end
     end)
 end
@@ -150,7 +150,7 @@ local function startTestDriveTimer(testDriveTime, prevCoords)
                     testDriveVeh = 0
                     inTestDrive = false
                     SetEntityCoords(PlayerPedId(), prevCoords)
-                    QBCore.Functions.Notify(Lang:t('general.testdrive_complete'))
+                    raino.Functions.Notify(Lang:t('general.testdrive_complete'))
                 end
                 drawTxt(Lang:t('general.testdrive_timer') .. math.ceil(testDriveTime - secondsLeft / 1000), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
             end
@@ -179,14 +179,14 @@ local function createVehZones(shopName, entity)
         combo:onPlayerInOut(function(isPointInside)
             if isPointInside then
                 if PlayerData and PlayerData.job and (PlayerData.job.name == Config.Shops[insideShop]['Job'] or Config.Shops[insideShop]['Job'] == 'none') then
-                    exports['qb-menu']:showHeader(vehHeaderMenu)
+                    exports['raino_menu']:showHeader(vehHeaderMenu)
                 end
             else
-                exports['qb-menu']:closeMenu()
+                exports['raino_menu']:closeMenu()
             end
         end)
     else
-        exports['qb-target']:AddTargetEntity(entity, {
+        exports['raino_target']:AddTargetEntity(entity, {
             options = {
                 {
                     type = "client",
@@ -372,9 +372,9 @@ function Init()
 
         financeZone:onPlayerInOut(function(isPointInside)
             if isPointInside then
-                exports['qb-menu']:showHeader(financeMenu)
+                exports['raino_menu']:showHeader(financeMenu)
             else
-                exports['qb-menu']:closeMenu()
+                exports['raino_menu']:closeMenu()
             end
         end)
     end)
@@ -404,11 +404,11 @@ end
 
 -- Events
 RegisterNetEvent('raino_bilbutikk:client:homeMenu', function()
-    exports['qb-menu']:openMenu(vehicleMenu)
+    exports['raino_menu']:openMenu(vehicleMenu)
 end)
 
 RegisterNetEvent('raino_bilbutikk:client:showVehOptions', function()
-    exports['qb-menu']:openMenu(vehicleMenu)
+    exports['raino_menu']:openMenu(vehicleMenu)
 end)
 
 RegisterNetEvent('raino_bilbutikk:client:TestDrive', function()
@@ -416,19 +416,19 @@ RegisterNetEvent('raino_bilbutikk:client:TestDrive', function()
         inTestDrive = true
         local prevCoords = GetEntityCoords(PlayerPedId())
         tempShop = insideShop -- temp hacky way of setting the shop because it changes after the callback has returned since you are outside the zone
-        QBCore.Functions.TriggerCallback('QBCore:Server:SpawnVehicle', function(netId)
+        raino.Functions.TriggerCallback('raino:Server:SpawnVehicle', function(netId)
             local veh = NetToVeh(netId)
             exports['LegacyFuel']:SetFuel(veh, 100)
             SetVehicleNumberPlateText(veh, 'TESTDRIVE')
             SetEntityHeading(veh, Config.Shops[tempShop]["TestDriveSpawn"].w)
-            TriggerEvent('vehiclekeys:client:SetOwner', QBCore.Functions.GetPlate(veh))
+            TriggerEvent('vehiclekeys:client:SetOwner', raino.Functions.GetPlate(veh))
             testDriveVeh = netId
-            QBCore.Functions.Notify(Lang:t('general.testdrive_timenoti', {testdrivetime = Config.Shops[tempShop]["TestDriveTimeLimit"]}))
+            raino.Functions.Notify(Lang:t('general.testdrive_timenoti', {testdrivetime = Config.Shops[tempShop]["TestDriveTimeLimit"]}))
         end, Config.Shops[tempShop]["ShowroomVehicles"][ClosestVehicle].chosenVehicle, Config.Shops[tempShop]["TestDriveSpawn"], true)
         createTestDriveReturn()
         startTestDriveTimer(Config.Shops[tempShop]["TestDriveTimeLimit"] * 60, prevCoords)
     else
-        QBCore.Functions.Notify(Lang:t('error.testdrive_alreadyin'), 'error')
+        raino.Functions.Notify(Lang:t('error.testdrive_alreadyin'), 'error')
     end
 end)
 
@@ -438,19 +438,19 @@ RegisterNetEvent('raino_bilbutikk:client:customTestDrive', function(data)
         local vehicle = data
         local prevCoords = GetEntityCoords(PlayerPedId())
         tempShop = insideShop -- temp hacky way of setting the shop because it changes after the callback has returned since you are outside the zone
-        QBCore.Functions.TriggerCallback('QBCore:Server:SpawnVehicle', function(netId)
+        raino.Functions.TriggerCallback('raino:Server:SpawnVehicle', function(netId)
             local veh = NetToVeh(netId)
             exports['LegacyFuel']:SetFuel(veh, 100)
             SetVehicleNumberPlateText(veh, 'TESTDRIVE')
             SetEntityHeading(veh, Config.Shops[tempShop]["TestDriveSpawn"].w)
-            TriggerEvent('vehiclekeys:client:SetOwner', QBCore.Functions.GetPlate(veh))
+            TriggerEvent('vehiclekeys:client:SetOwner', raino.Functions.GetPlate(veh))
             testDriveVeh = netId
-            QBCore.Functions.Notify(Lang:t('general.testdrive_timenoti', {testdrivetime = Config.Shops[tempShop]["TestDriveTimeLimit"]}))
+            raino.Functions.Notify(Lang:t('general.testdrive_timenoti', {testdrivetime = Config.Shops[tempShop]["TestDriveTimeLimit"]}))
         end, vehicle, Config.Shops[tempShop]["TestDriveSpawn"], true)
         createTestDriveReturn()
         startTestDriveTimer(Config.Shops[tempShop]["TestDriveTimeLimit"] * 60, prevCoords)
     else
-        QBCore.Functions.Notify(Lang:t('error.testdrive_alreadyin'), 'error')
+        raino.Functions.Notify(Lang:t('error.testdrive_alreadyin'), 'error')
     end
 end)
 
@@ -462,10 +462,10 @@ RegisterNetEvent('raino_bilbutikk:client:TestDriveReturn', function()
         testDriveVeh = 0
         inTestDrive = false
         DeleteEntity(veh)
-        exports['qb-menu']:closeMenu()
+        exports['raino_menu']:closeMenu()
         testDriveZone:destroy()
     else
-        QBCore.Functions.Notify(Lang:t('error.testdrive_return'), 'error')
+        raino.Functions.Notify(Lang:t('error.testdrive_return'), 'error')
     end
 end)
 
@@ -480,14 +480,14 @@ RegisterNetEvent('raino_bilbutikk:client:vehCategories', function()
             }
         }
     }
-	for k, v in pairs(QBCore.Shared.Vehicles) do
-        if type(QBCore.Shared.Vehicles[k]["shop"]) == 'table' then
-            for _, shop in pairs(QBCore.Shared.Vehicles[k]["shop"]) do
+	for k, v in pairs(raino.Shared.Vehicles) do
+        if type(raino.Shared.Vehicles[k]["shop"]) == 'table' then
+            for _, shop in pairs(raino.Shared.Vehicles[k]["shop"]) do
                 if shop == insideShop then
                     catmenu[v.category] = v.category
                 end
             end
-        elseif QBCore.Shared.Vehicles[k]["shop"] == insideShop then
+        elseif raino.Shared.Vehicles[k]["shop"] == insideShop then
                 catmenu[v.category] = v.category
         end
     end
@@ -503,7 +503,7 @@ RegisterNetEvent('raino_bilbutikk:client:vehCategories', function()
             }
         }
     end
-    exports['qb-menu']:openMenu(categoryMenu)
+    exports['raino_menu']:openMenu(categoryMenu)
 end)
 
 RegisterNetEvent('raino_bilbutikk:client:openVehCats', function(data)
@@ -516,10 +516,10 @@ RegisterNetEvent('raino_bilbutikk:client:openVehCats', function(data)
             }
         }
     }
-    for k, v in pairs(QBCore.Shared.Vehicles) do
-        if QBCore.Shared.Vehicles[k]["category"] == data.catName then
-            if type(QBCore.Shared.Vehicles[k]["shop"]) == 'table' then
-                for _, shop in pairs(QBCore.Shared.Vehicles[k]["shop"]) do
+    for k, v in pairs(raino.Shared.Vehicles) do
+        if raino.Shared.Vehicles[k]["category"] == data.catName then
+            if type(raino.Shared.Vehicles[k]["shop"]) == 'table' then
+                for _, shop in pairs(raino.Shared.Vehicles[k]["shop"]) do
                     if shop == insideShop then
                         vehMenu[#vehMenu + 1] = {
                             header = v.name,
@@ -537,7 +537,7 @@ RegisterNetEvent('raino_bilbutikk:client:openVehCats', function(data)
                         }
                     end
                 end
-            elseif QBCore.Shared.Vehicles[k]["shop"] == insideShop then
+            elseif raino.Shared.Vehicles[k]["shop"] == insideShop then
                 vehMenu[#vehMenu + 1] = {
                     header = v.name,
                     txt = Lang:t('menus.veh_price') .. v.price,
@@ -555,11 +555,11 @@ RegisterNetEvent('raino_bilbutikk:client:openVehCats', function(data)
             end
         end
     end
-    exports['qb-menu']:openMenu(vehMenu)
+    exports['raino_menu']:openMenu(vehMenu)
 end)
 
 RegisterNetEvent('raino_bilbutikk:client:openFinance', function(data)
-    local dialog = exports['qb-input']:ShowInput({
+    local dialog = exports['raino_input']:ShowInput({
         header = getVehBrand():upper() .. ' ' .. data.buyVehicle:upper() .. ' - $' .. data.price,
         submitText = Lang:t('menus.submit_text'),
         inputs = {
@@ -585,7 +585,7 @@ end)
 
 RegisterNetEvent('raino_bilbutikk:client:openCustomFinance', function(data)
     TriggerEvent('animations:client:EmoteCommandStart', {"tablet2"})
-    local dialog = exports['qb-input']:ShowInput({
+    local dialog = exports['raino_input']:ShowInput({
         header = getVehBrand():upper() .. ' ' .. data.vehicle:upper() .. ' - $' .. data.price,
         submitText = Lang:t('menus.submit_text'),
         inputs = {
@@ -619,7 +619,7 @@ end)
 RegisterNetEvent('raino_bilbutikk:client:swapVehicle', function(data)
     local shopName = data.ClosestShop
     if Config.Shops[shopName]["ShowroomVehicles"][data.ClosestVehicle].chosenVehicle ~= data.toVehicle then
-        local closestVehicle, closestDistance = QBCore.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]["ShowroomVehicles"][data.ClosestVehicle].coords.x, Config.Shops[shopName]["ShowroomVehicles"][data.ClosestVehicle].coords.y, Config.Shops[shopName]["ShowroomVehicles"][data.ClosestVehicle].coords.z))
+        local closestVehicle, closestDistance = raino.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]["ShowroomVehicles"][data.ClosestVehicle].coords.x, Config.Shops[shopName]["ShowroomVehicles"][data.ClosestVehicle].coords.y, Config.Shops[shopName]["ShowroomVehicles"][data.ClosestVehicle].coords.z))
         if closestVehicle == 0 then return end
         if closestDistance < 5 then DeleteEntity(closestVehicle) end
         while DoesEntityExist(closestVehicle) do
@@ -647,23 +647,23 @@ RegisterNetEvent('raino_bilbutikk:client:swapVehicle', function(data)
 end)
 
 RegisterNetEvent('raino_bilbutikk:client:buyShowroomVehicle', function(vehicle, plate)
-    tempShop = insideShop -- temp hacky way of setting the shop because it changes after the callback has returned since you are outside the zone
-    QBCore.Functions.TriggerCallback('QBCore:Server:SpawnVehicle', function(netId)
+    tempShop = insideShop -- Temp hacky måte å sette butikken på fordi den endres etter at tilbakeringingen har kommet tilbake siden du er utenfor sonen
+    raino.Functions.TriggerCallback('raino:Server:SpawnVehicle', function(netId)
         local veh = NetToVeh(netId)
         exports['LegacyFuel']:SetFuel(veh, 100)
         SetVehicleNumberPlateText(veh, plate)
         SetEntityHeading(veh, Config.Shops[tempShop]["VehicleSpawn"].w)
-        TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh))
-        TriggerServerEvent("qb-vehicletuning:server:SaveVehicleProps", QBCore.Functions.GetVehicleProperties(veh))
+        TriggerEvent("vehiclekeys:client:SetOwner", raino.Functions.GetPlate(veh))
+        TriggerServerEvent("raino_vehicletuning:server:SaveVehicleProps", raino.Functions.GetVehicleProperties(veh))
     end, vehicle, Config.Shops[tempShop]["VehicleSpawn"], true)
 end)
 
 RegisterNetEvent('raino_bilbutikk:client:getVehicles', function()
-    QBCore.Functions.TriggerCallback('raino_bilbutikk:server:getVehicles', function(vehicles)
+    raino.Functions.TriggerCallback('raino_bilbutikk:server:getVehicles', function(vehicles)
         local ownedVehicles = {}
         for _, v in pairs(vehicles) do
             if v.balance ~= 0 then
-                local name = QBCore.Shared.Vehicles[v.vehicle]["name"]
+                local name = raino.Shared.Vehicles[v.vehicle]["name"]
                 local plate = v.plate:upper()
                 ownedVehicles[#ownedVehicles + 1] = {
                     header = name,
@@ -682,9 +682,9 @@ RegisterNetEvent('raino_bilbutikk:client:getVehicles', function()
             end
         end
         if #ownedVehicles > 0 then
-            exports['qb-menu']:openMenu(ownedVehicles)
+            exports['raino_menu']:openMenu(ownedVehicles)
         else
-            QBCore.Functions.Notify(Lang:t('error.nofinanced'), 'error', 7500)
+            raino.Functions.Notify(Lang:t('error.nofinanced'), 'error', 7500)
         end
     end)
 end)
@@ -740,11 +740,11 @@ RegisterNetEvent('raino_bilbutikk:client:getVehicleFinance', function(data)
             }
         },
     }
-    exports['qb-menu']:openMenu(vehFinance)
+    exports['raino_menu']:openMenu(vehFinance)
 end)
 
 RegisterNetEvent('raino_bilbutikk:client:financePayment', function(data)
-    local dialog = exports['qb-input']:ShowInput({
+    local dialog = exports['raino_input']:ShowInput({
         header = Lang:t('menus.veh_finance'),
         submitText = Lang:t('menus.veh_finance_pay'),
         inputs = {
@@ -763,8 +763,8 @@ RegisterNetEvent('raino_bilbutikk:client:financePayment', function(data)
 end)
 
 RegisterNetEvent('raino_bilbutikk:client:openIdMenu', function(data)
-    local dialog = exports['qb-input']:ShowInput({
-        header = QBCore.Shared.Vehicles[data.vehicle]["name"],
+    local dialog = exports['raino_input']:ShowInput({
+        header = raino.Shared.Vehicles[data.vehicle]["name"],
         submitText = Lang:t('menus.submit_text'),
         inputs = {
             {
