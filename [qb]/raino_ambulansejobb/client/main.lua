@@ -676,7 +676,7 @@ RegisterNetEvent('hospital:client:SendBillEmail', function(amount)
             gender = Lang:t('info.mrs')
         end
         local charinfo = raino.Functions.GetPlayerData().charinfo
-        TriggerServerEvent('qb_telefon:server:sendNewMail', {
+        TriggerServerEvent('raino_telefon:server:sendNewMail', {
             sender = Lang:t('mail.sender'),
             subject = Lang:t('mail.subject'),
             message = Lang:t('mail.message', {gender = gender, lastname = charinfo.lastname, costs = amount}),
@@ -730,11 +730,11 @@ CreateThread(function()
         local sleep = 1000
         if isInHospitalBed and canLeaveBed then
             sleep = 0
-            exports['qb-core']:DrawText(Lang:t('text.bed_out'))
+            exports['raino_core']:DrawText(Lang:t('text.bed_out'))
             if IsControlJustReleased(0, 38) then
-                exports['qb-core']:KeyPressed(38)
+                exports['raino_core']:KeyPressed(38)
                 LeaveBed()
-                exports['qb-core']:HideText()
+                exports['raino_core']:HideText()
             end
         end
         Wait(sleep)
@@ -832,7 +832,7 @@ local listen = false
         listen = true
         while listen do
             if IsControlJustPressed(0, 38) then
-                exports['qb-core']:KeyPressed(38)
+                exports['raino_core']:KeyPressed(38)
                 if variable == "checkin" then
                    TriggerEvent('raino_ambulanse:checkin')
                     listen = false
@@ -883,7 +883,7 @@ end)
 if Config.UseTarget then
     CreateThread(function()
         for k, v in pairs(Config.Locations["checking"]) do
-            exports['qb-target']:AddBoxZone("checking"..k, vector3(v.x, v.y, v.z), 3.5, 2, {
+            exports['raino_eye']:AddBoxZone("checking"..k, vector3(v.x, v.y, v.z), 3.5, 2, {
                 name = "checking"..k,
                 heading = -72,
                 debugPoly = false,
@@ -895,7 +895,7 @@ if Config.UseTarget then
                         type = "client",
                         icon = "fa fa-clipboard",
                         event = "raino_ambulanse:checkin",
-                        label = "Check In",
+                        label = "Sjekk inn",
                     }
                 },
                 distance = 1.5
@@ -903,7 +903,7 @@ if Config.UseTarget then
         end
 
         for k, v in pairs(Config.Locations["beds"]) do
-            exports['qb-target']:AddBoxZone("beds"..k,  v.coords, 2.5, 2.3, {
+            exports['raino_eye']:AddBoxZone("beds"..k,  v.coords, 2.5, 2.3, {
                 name = "beds"..k,
                 heading = -20,
                 debugPoly = false,
@@ -915,7 +915,7 @@ if Config.UseTarget then
                         type = "client",
                         event = "raino_ambulanse:beds",
                         icon = "fas fa-bed",
-                        label = "Layin Bed",
+                        label = "Legg deg i sengen",
                     }
                 },
                 distance = 1.5
@@ -937,15 +937,15 @@ else
             checkingCombo:onPlayerInOut(function(isPointInside)
                 if isPointInside then
                     if doctorCount >= Config.MinimalDoctors then
-                        exports['qb-core']:DrawText(Lang:t('text.call_doc'),'left')
+                        exports['raino_core']:DrawText(Lang:t('text.call_doc'),'left')
                         CheckInControls("checkin")
                     else
-                        exports['qb-core']:DrawText(Lang:t('text.check_in'), 'left')
+                        exports['raino_core']:DrawText(Lang:t('text.check_in'), 'left')
                         CheckInControls("checkin")
                     end
                 else
                     listen = false
-                    exports['qb-core']:HideText()
+                    exports['raino_core']:HideText()
                 end
             end)
         end
@@ -961,11 +961,11 @@ else
             local bedCombo = ComboZone:Create(bedPoly, {name = "bedCombo", debugPoly = false})
             bedCombo:onPlayerInOut(function(isPointInside)
                 if isPointInside then
-                    exports['qb-core']:DrawText(Lang:t('text.lie_bed'), 'left')
+                    exports['raino_core']:DrawText(Lang:t('text.lie_bed'), 'left')
                     CheckInControls("beds")
                 else
                     listen = false
-                    exports['qb-core']:HideText()
+                    exports['raino_core']:HideText()
                 end
             end)
         end

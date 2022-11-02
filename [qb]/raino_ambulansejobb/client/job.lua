@@ -457,7 +457,7 @@ end)
 if Config.UseTarget then
     CreateThread(function()
         for k, v in pairs(Config.Locations["duty"]) do
-            exports['raino_target']:AddBoxZone("duty" .. k, vector3(v.x, v.y, v.z), 1.5, 1, {
+            exports['raino_eye']:AddBoxZone("duty" .. k, vector3(v.x, v.y, v.z), 1.5, 1, {
                 name = "duty" .. k,
                 debugPoly = false,
                 heading = -20,
@@ -477,7 +477,7 @@ if Config.UseTarget then
             })
         end
         for k, v in pairs(Config.Locations["stash"]) do
-            exports['raino_target']:AddBoxZone("stash" .. k, vector3(v.x, v.y, v.z), 1, 1, {
+            exports['raino_eye']:AddBoxZone("stash" .. k, vector3(v.x, v.y, v.z), 1, 1, {
                 name = "stash" .. k,
                 debugPoly = false,
                 heading = -20,
@@ -497,7 +497,7 @@ if Config.UseTarget then
             })
         end
         for k, v in pairs(Config.Locations["armory"]) do
-            exports['raino_target']:AddBoxZone("armory" .. k, vector3(v.x, v.y, v.z), 1, 1, {
+            exports['raino_eye']:AddBoxZone("armory" .. k, vector3(v.x, v.y, v.z), 1, 1, {
                 name = "armory" .. k,
                 debugPoly = false,
                 heading = -20,
@@ -517,7 +517,7 @@ if Config.UseTarget then
             })
         end
         for k, v in pairs(Config.Locations["roof"]) do
-            exports['raino_target']:AddBoxZone("roof" .. k, vector3(v.x, v.y, v.z), 2, 2, {
+            exports['raino_eye']:AddBoxZone("roof" .. k, vector3(v.x, v.y, v.z), 2, 2, {
                 name = "roof" .. k,
                 debugPoly = false,
                 heading = -20,
@@ -537,7 +537,7 @@ if Config.UseTarget then
             })
         end
         for k, v in pairs(Config.Locations["main"]) do
-            exports['raino_target']:AddBoxZone("main" .. k, vector3(v.x, v.y, v.z), 1.5, 1.5, {
+            exports['raino_eye']:AddBoxZone("main" .. k, vector3(v.x, v.y, v.z), 1.5, 1.5, {
                 name = "main" .. k,
                 debugPoly = false,
                 heading = -20,
