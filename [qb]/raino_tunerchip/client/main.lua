@@ -1,4 +1,4 @@
-raino = exports['qb-core']:GetCoreObject()
+raino = exports['raino_core']:GetCoreObject()
 local RainbowNeon = false
 LastEngineMultiplier = 1.0
 

@@ -12,7 +12,7 @@ client_scripts {
 }
 
 shared_scripts {
-    '@qb-core/shared/locale.lua',
+    '@raino_core/shared/locale.lua',
     'locales/en.lua',
     'locales/*.lua',
 }

@@ -1,4 +1,4 @@
-local raino = exports['qb-core']:GetCoreObject()
+local raino = exports['raino_core']:GetCoreObject()
 local tunedVehicles = {}
 
 raino.Functions.CreateUseableItem("tunerlaptop", function(source)
