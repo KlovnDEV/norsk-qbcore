@@ -26,7 +26,7 @@ ADD UNIQUE INDEX UK_playervehicles_plate (plate);
 
 ALTER TABLE `spiller_kjoretoy`
 ADD CONSTRAINT FK_playervehicles_players FOREIGN KEY (citizenid)
-REFERENCES `players` (citizenid) ON DELETE CASCADE ON UPDATE CASCADE;
+REFERENCES `spiller` (citizenid) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE `spiller_kjoretoy`
 ADD COLUMN `balance` int(11) NOT NULL DEFAULT 0;
