@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `player_vehicles` (
+CREATE TABLE IF NOT EXISTS `spiller_kjoretoy` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `license` varchar(50) DEFAULT NULL,
     `citizenid` varchar(50) DEFAULT NULL,
@@ -21,18 +21,18 @@ CREATE TABLE IF NOT EXISTS `player_vehicles` (
     KEY `license` (`license`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1;
 
-ALTER TABLE `player_vehicles`
+ALTER TABLE `spiller_kjoretoy`
 ADD UNIQUE INDEX UK_playervehicles_plate (plate);
 
-ALTER TABLE `player_vehicles`
+ALTER TABLE `spiller_kjoretoy`
 ADD CONSTRAINT FK_playervehicles_players FOREIGN KEY (citizenid)
 REFERENCES `players` (citizenid) ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE `player_vehicles`
+ALTER TABLE `spiller_kjoretoy`
 ADD COLUMN `balance` int(11) NOT NULL DEFAULT 0;
-ALTER TABLE `player_vehicles`
+ALTER TABLE `spiller_kjoretoy`
 ADD COLUMN `paymentamount` int(11) NOT NULL DEFAULT 0;
-ALTER TABLE `player_vehicles`
+ALTER TABLE `spiller_kjoretoy`
 ADD COLUMN `paymentsleft` int(11) NOT NULL DEFAULT 0;
-ALTER TABLE `player_vehicles`
+ALTER TABLE `spiller_kjoretoy`
 ADD COLUMN `financetime` int(11) NOT NULL DEFAULT 0;
